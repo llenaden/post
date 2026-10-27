@@ -73,7 +73,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .home-title{font-size:var(--fs-s);color:var(--muted);font-weight:500;padding-inline:4px;margin-top:8px}
 .brand{font-family:var(--logo);color:var(--blue);font-size:35px;line-height:1;transform:rotate(-4deg);display:inline-block;align-self:center}
 .me{display:flex;align-items:center;gap:12px;background:var(--white);border-radius:24px;padding:16px 20px;box-shadow:var(--shadow);border:0;text-align:left;width:100%}
-.me .av{width:56px;height:56px;border-radius:50%;flex:none;background:var(--sky) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--navy);font-size:21px}
+.me .av{width:48px;height:48px;border-radius:50%;flex:none;background:var(--sky) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--navy);font-size:21px}
 .me .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .me b{font-size:var(--fs-b);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .me small{font-size:var(--fs-s);color:var(--muted)}
@@ -83,7 +83,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .fan{position:relative;height:140px;width:100%}
 .fan img{position:absolute;top:10px;left:50%;width:120px;height:120px;border-radius:16px;box-shadow:var(--shadow);object-fit:cover;background:var(--white)}
 .hero-card h2{font-size:calc(var(--fs-h) - 4px);font-weight:600;letter-spacing:-.01em}
-.hero-card p{color:var(--muted);max-width:30ch}
+.hero-card p{color:var(--muted);max-width:30ch;font-size:var(--fs-s);line-height:1.4}
 .hero-card{border:0;width:100%;font:inherit;color:inherit;cursor:pointer}
 .resume{display:flex;align-items:center;gap:16px;background:var(--white);border-radius:24px;padding:16px 20px 16px 16px;box-shadow:var(--shadow);border:0;text-align:left;width:100%;cursor:pointer}
 .resume canvas{width:88px;height:88px;border-radius:14px;flex:none;box-shadow:0 0 0 1px var(--line);background:var(--soft)}
@@ -94,8 +94,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .resume .chev,.me .chev{color:var(--muted)}
 .resume .chev svg{width:18px;height:18px;display:block}
 .newcard{gap:8px}
-.newcard .plus{width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:4px}
-.newcard .plus svg{width:20px;height:20px}
+.newcard .plus{width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:4px}
+.newcard .plus svg,.me .av svg{width:20px;height:20px;display:block}
 
 /* buttons */
 .btn{border:0;background:var(--white);border-radius:999px;min-height:48px;padding:0 var(--s3);font-weight:600;font-size:var(--fs-b);display:inline-flex;align-items:center;justify-content:center;gap:var(--s1);white-space:nowrap;box-shadow:var(--shadow);color:var(--ink);text-decoration:none}
@@ -1577,7 +1577,7 @@ function confirmNew(){
 let homeThumb=null;
 function renderHome(app){
   homeThumb=null;
-  const av=h('span',{cls:'av'}); if(profile.face) av.style.backgroundImage=`url(${profile.face})`; else av.textContent=(profile.name||profile.nick||'+').replace(/^@/,'').charAt(0).toUpperCase();
+  const av=h('span',{cls:'av'}); if(profile.face) av.style.backgroundImage=`url(${profile.face})`; else if(profile.name||profile.nick) av.textContent=(profile.name||profile.nick).replace(/^@/,'').charAt(0).toUpperCase(); else av.innerHTML=SV.plus;
   const filled=profile.done;
   const me=h('button',{type:'button',cls:'me',onclick:()=>openProfile('p-name')},av,
     h('span',{cls:'who'},h('b',null,filled?([profile.name,profile.nick].filter(Boolean).join(' · ')||'Ваши данные'):'Заполните ваши данные'),h('small',null,filled?(profile.direction||'Изменить данные'):'Имя, ник и фото — один раз')),
