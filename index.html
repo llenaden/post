@@ -325,10 +325,10 @@ const INNERS=[['i-text','Заголовок + текст'],['i-list','Списо
 const FINALS=[['none','Без неё'],['a-circle','Кружок'],['a-badge','Бейдж'],['a-full','В полный рост']];
 const TPLNAME=Object.fromEntries([...COVERS,...INNERS]);
 const DEF_BG={'i-callouts':'light','i-review':'blue','i-schedule':'light','i-onphoto':'blue','i-grid':'light','i-note':'blue','i-center':'white','c-select':'light','c-halftone':'white','c-photocard':'white','c-framed':'white','c-split':'white','c-type':'blue','c-circle':'blue','c-panel':'white','c-sticker':'blue','i-text':'light','i-list':'white','i-stats':'blue','i-photo':'light','i-accent':'lime','i-steps':'white','i-myth':'light','i-quote':'light','i-exercise':'blue','a-circle':'light','a-badge':'blue'};
-const OPT_IMG={'i-review':1,'i-schedule':1,'i-photo':1,'i-onphoto':1,'i-grid':1,'i-center':1}; // photo is optional: tapping the chosen source again removes it
+const OPT_IMG={'c-photo':1,'c-split':1,'c-circle':1,'c-panel':1,'c-photocard':1,'i-exercise':1,'i-callouts':1,'i-review':1,'i-schedule':1,'i-photo':1,'i-onphoto':1,'i-grid':1,'i-center':1}; // photo is optional: tapping the chosen source again removes it
 const NEEDS_PHOTO={'c-framed':1,'c-split':1,'c-person':1,'c-circle':1,'c-panel':1,'c-photocard':1};
 const FIELDS={
-  'c-photo':['img','tags','title','subtitle'],
+  'c-photo':['img','bg','tags','title','subtitle'],
   'c-framed':['img','bg','tags','title','subtitle'],
   'c-split':['img','bg','tags','title','subtitle'],
   'c-person':['img','bg','tags','title','subtitle'],
@@ -792,8 +792,12 @@ function halftone(ctx,cx,cy,R,col,rot){ // rounded plus blob made of dots: solid
 }
 
 /* ---- covers: text always anchored to the bottom margin (Фото сверху — right under the photo) ---- */
+/* «Без фото» on any photo template: the card falls back to the text-only layout on the chosen background colour */
+const hasPic=c=>!!c.img&&(hasSrc(c.img)||R.demo);
+const PHOTO_COVERS={'c-photo':1,'c-split':1,'c-person':1,'c-circle':1,'c-panel':1,'c-photocard':1,'c-framed':1};
 function renderCover(ctx,c){
   const W=S-2*P, ph=palette('photo'), I=T.inset, bottom=S-P;
+  if(PHOTO_COVERS[c.tpl]&&!hasPic(c)){ const pal=palette(c.bg); fillBg(ctx,pal); drawBlobs(ctx,pal); drawHeader(ctx,pal.fg); const st=coverStack(ctx,c,pal,W,bottom-T.innerTop); st.draw(P,bottom-st.h); return; }
   switch(c.tpl){
     case 'c-framed':{
       const pal=palette(c.bg); fillBg(ctx,pal); drawHeader(ctx,pal.fg);
@@ -975,7 +979,7 @@ const REF_INNER={
     const pal=palette(c.bg), I=T.inset, W=S-2*P; fillBg(ctx,pal); drawHeader(ctx,pal.fg);
     let y0=T.frameTop; if((c.title||'').trim()){ const st=stack(ctx,[{t:'h2',text:c.title}],pal,W,220); st.draw(P,T.innerTop); y0=T.innerTop+st.h+40; }
     const px=150, pw=S-2*px, y1=S-P;
-    photo(ctx,c.img,c,px,y0,pw,y1-y0,T.radius,false,true);
+    if(hasPic(c)) photo(ctx,c.img,c,px,y0,pw,y1-y0,T.radius,false,true); else drawBlobs(ctx,pal);
     const items=String(c.items||'').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,4); if(!items.length) return;
     const card=palette('white'), size=T.body, lh=1.35, pad=24, d=40, gx=16, maxW=560;
     const boxes=items.map(s=>{ let lines=wrap(ctx,s,maxW-pad*2-d-gx,size,400,700); const tw=Math.max(...lines.map(l=>l.w)); return {lines,w:Math.min(maxW,pad*2+d+gx+tw),h:Math.max(d+pad*2-8,pad*2-8+lines.length*size*lh)}; });
@@ -1107,7 +1111,7 @@ function renderInner(ctx,c){
     const s=QD*.46/24; ctx.save(); ctx.translate(cx-12*s,cy-12*s); ctx.scale(s,s); ctx.fillStyle=bg==='lime'?'#fff':BR.ink; ctx.fill(QUOTE); ctx.restore();
   }
   if(c.tpl==='i-exercise'){ // photo in a ringed circle anchored to the bottom-right margin, steps to its left
-    const ex=imgInfo(c.img,c), show=ex||R.demo, ring=12;
+    const show=hasPic(c), ring=12;
     const st=stack(ctx,innerBlocks(c,show?S-P-EXD-ring-40-P:0),pal,W,bottom-top);
     if(show){ const cx=S-P-EXD/2, cy=bottom-EXD/2;
       ctx.beginPath(); ctx.arc(cx,cy,EXD/2+ring,0,Math.PI*2); ctx.fillStyle=pal.ring; ctx.fill();
@@ -1334,7 +1338,8 @@ function imgField(card,key='img'){
     b.onclick=()=>{ card[key]=null; saveDraft(); rebuild(); }; srcs.append(b); }
   if(key!=='avatar'){ if(profile.full) opt('profile:full','В рост',profile.full); if(profile.face) opt('profile:face','Лицо',profile.face); }
   if(card[key]&&!card[key].startsWith('profile:')&&draft.images[card[key]]) card[own_k]=card[key];
-  if(card[key]&&card[key].startsWith('demo:')) opt(card[key],'Пример',DEMO_SRC[card[key].slice(5)]);
+  if(card[key]&&card[key].startsWith('demo:')) card['demo_'+key]=card[key];
+  const ex=card['demo_'+key]; if(ex&&ex.startsWith('demo:')) opt(ex,'Пример',DEMO_SRC[ex.slice(5)]);
   const own=card[own_k]&&draft.images[card[own_k]];
   if(own) opt(card[own_k],'Своё',own);
   const fid='f'+uid(), inp=h('input',{type:'file',accept:'image/*',id:fid,cls:'file'});
